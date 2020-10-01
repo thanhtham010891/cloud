@@ -1,0 +1,38 @@
+version: '3.2'
+
+services:
+  mysql:
+    build: ./docker/mysql
+    container_name: mysql
+    restart: unless-stopped
+    ports:
+      - 3306:3306
+    env_file:
+      - ./.env
+    environment:
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-cloud_db}
+      - MYSQL_USER=${MYSQL_USER:-root}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
+    volumes:
+      - ./docker/mysql/data:/var/lib/mysql
+
+  redis:
+    restart: unless-stopped
+    image: redis
+    container_name: redis
+
+  app:
+    image: nextcloud
+    container_name: app
+    restart: unless-stopped
+    ports:
+      - 80:80
+    env_file:
+      - ./.env
+    environment:
+      - REDIS_HOST=${REDIS_HOST:-redis}
+    volumes:
+      - ./src:/var/www/html
+    depends_on:
+      - mysql
+      - redis
